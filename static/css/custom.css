@@ -80,7 +80,7 @@ button.btn.btn-info {
     padding-left: 30px;
     padding-right: 30px;
     overflow: auto;
-    height: 77vh;
+    height: 87vh;
     display: block;
     z-index: 47;
     box-sizing: border-box;
@@ -124,19 +124,6 @@ span.bluetxt {
     transform: translate(0px, 0px);
 }
 
-ul.dc-cbox-group{
-    list-style-type: none;
-}
-
-li.dc-cbox-item input{
-    display: none;
-}
-
-li.dc-cbox-item label{
-    cursor: pointer;
-    min-width: 180px;
-}
-
 div.dc-html-legend .dc-legend-item-horizontal  {
     padding: 1rem 1rem;
 font-size: 1.25rem;
@@ -159,6 +146,38 @@ div.dc-html-legend .dc-legend-item-horizontal.selected {
     background-color: #82b648;
     color: #fff;
 }
+
+div#searchBox {
+    width: 60%;
+    padding-top: 30px;
+    line-height: 2.5;
+}
+
+#searchBox .dc-text-filter-input, #maxPriceSearchBox .dc-text-filter-input{
+    width: 100%
+}
+
+div#maxPriceSearchBox {
+    width: 37%;
+    padding-top: 30px;
+    line-height: 2.5;
+    float: right;
+}
+
+.luas-btn{
+    margin-top:1rem;
+    height: 3.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: .3rem;
+    color: #212529;
+    background-color: #ffffff;
+    outline: none;
+}
+
+.luas-btn.active{
+    box-shadow: 0 0 3px black;
+}
+
 
 /* BUILD THEMES */
 /* .header {
@@ -184,17 +203,3 @@ div.dc-html-legend .dc-legend-item-horizontal.selected {
 .data-area {
     background-color: #858086;
 } */
-
-#floating-panel {
-    position: absolute;
-    top: 10px;
-    left: 25%;
-    z-index: 5;
-    background-color: #fff;
-    padding: 5px;
-    border: 1px solid #999;
-    text-align: center;
-    font-family: 'Roboto','sans-serif';
-    line-height: 30px;
-    padding-left: 10px;
-  }

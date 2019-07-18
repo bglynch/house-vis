@@ -8,6 +8,8 @@ d3.json('static/js/data.json')
 var map;
 var markers = [];
 var luasStationMarkers = [];
+var dartStationMarkers = [];
+// var bounds = new google.maps.LatLngBounds();
 var ndx;
 var val1Dim, val2Dim, berDim, propertyTypeDim, bedsDim, bathsDim;
 var val1Group, val2Group;
@@ -55,9 +57,9 @@ function makeGraphs(data) {
   row_areas(ndx);
   bar_garden(ndx);
   bar_parking(ndx);
-  row_postcode(ndx);
   row_propertyType(ndx);
   scatter_priceVsFloorArea(ndx);
+  pie_postcode(ndx);
   searchBox(ndx);
   maxPriceSearchBox(ndx);
 
@@ -74,7 +76,6 @@ function remove_empty_bins(source_group) {
   return {
     all: function () {
       return source_group.all().filter(function (d) {
-        //return Math.abs(d.value) > 0.00001; // if using floating-point numbers
         return d.value !== 0; // if integers only
       });
     }
@@ -84,13 +85,24 @@ function remove_empty_bins2(source_group) {
   return {
     all: function () {
       return source_group.all().filter(function (d) {
-        //return Math.abs(d.value) > 0.00001; // if using floating-point numbers
         return d.value.count !== 0; // if integers only
       });
     }
   };
 }
 
+// function updateChartsOnMapZoom() {
+//     google.maps.event.addListener(map, 'bounds_changed', function () {
+//         var bounds = this.getBounds();
+//         var northEast = bounds.getNorthEast();
+//         var southWest = bounds.getSouthWest();
+
+//         lngDimension.filterRange([southWest.lng(), northEast.lng()]);
+//         latDimension.filterRange([southWest.lat(), northEast.lat()]);
+
+//         dc.redrawAll();
+//     });
+// }
 
 function num_availHouses(ndx) {
   let group = ndx.groupAll();
@@ -320,7 +332,6 @@ function row_areas(ndx) {
     .xAxis().ticks(4)
     ;
 
-
 }
 
 function bar_garden(ndx) {
@@ -373,31 +384,6 @@ function row_propertyType(ndx) {
     .xAxis().ticks(4);
 }
 
-function row_postcode(ndx) {
-  let dim = ndx.dimension(function (d) { return d.postcode });
-  let group = dim.group();
-
-
-  let pieChart = dc.pieChart('#pie_postcode');
-  pieChart
-    .width(200)
-    .height(200)
-    .dimension(dim)
-    .group(group)
-    .ordering(dc.pluck('postcode'))
-    .legend(
-      dc.htmlLegend().container('#legend_postcode')
-        .horizontal(true)
-        .highlightSelected(true)
-    )
-    ;
-
-}
-
-
-
-
-
 function scatter_priceVsFloorArea(ndx) {
   let floorDim = ndx.dimension(function (d) { return d.floorArea });
   let priceDim = ndx.dimension(function (d) { return [d.floorArea, d.price] });
@@ -420,13 +406,33 @@ function scatter_priceVsFloorArea(ndx) {
     .margins({ top: 10, right: 50, bottom: 60, left: 80 });
 }
 
+function pie_postcode(ndx) {
+  let dim = ndx.dimension(function (d) { return d.postcode });
+  let group = dim.group();
+
+  let pieChart = dc.pieChart('#pie_postcode');
+  pieChart
+    .width(200)
+    .height(200)
+    .dimension(dim)
+    .group(group)
+    .ordering(dc.pluck('postcode'))
+    .legend(
+      dc.htmlLegend().container('#legend_postcode')
+        .horizontal(true)
+        .highlightSelected(true)
+    )
+    ;
+
+}
+
 function searchBox(ndx) {
   let dim = ndx.dimension(function (d) { return d.address });
 
   let chart = dc.textFilterWidget('#searchBox');
   chart
     .dimension(dim)
-    .placeHolder('Search by Address');
+    .placeHolder(' Search by Address');
 }
 
 function maxPriceSearchBox(ndx) {
@@ -442,7 +448,7 @@ function maxPriceSearchBox(ndx) {
       }
     })
     .transitionDelay(2000)
-    .placeHolder('Enter Max Price');
+    .placeHolder(' Enter Max Price');
     ;
 }
 
@@ -795,31 +801,6 @@ function initMap(data) {
     });
   }
 
-
-  // == Add luas markers
-
-  // https://stackoverflow.com/questions/39106230/style-multiple-geojson-files-with-the-google-maps-javascript-api-v3-data-layer/39107656
-  $.getJSON("./static/js/luas-stops.geojson",function(luasData){
-    for (var i = 0; i < luasData.features.length; i++) {
-      let d = luasData.features[i];
-      let latitude = d.geometry.coordinates[1];
-      let longitude = d.geometry.coordinates[0];
-
-      luasStationMarkers[i] = new google.maps.Marker({
-        position: new google.maps.LatLng(latitude, longitude),
-        map: map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          strokeColor: "black",
-          strokeWeight: 1,
-          fillColor: "blue",
-          fillOpacity: .8,
-          scale: 4
-        }
-      });    
-    }
-  });
-
 } // end initMap
 
 function updateMapOnChartFilters() {
@@ -845,11 +826,13 @@ function createMapIcon(d) {
   let fillColor;
   if (d.propertyType == "apartment") {
     symcolor = "black";
+    // pathz = "M22-48h-44v43h16l6 5 6-5h16z";
     pathz = google.maps.SymbolPath.CIRCLE;
     fillColor = "red"
   }
   else {
     symcolor = "black";
+    // pathz = "M0-48c-9.8 0-17.7 7.8-17.7 17.4 0 15.5 17.7 30.6 17.7 30.6s17.7-15.4 17.7-30.6c0-9.6-7.9-17.4-17.7-17.4z";
     pathz = google.maps.SymbolPath.CIRCLE;
     fillColor = "limegreen";
   }
@@ -894,10 +877,52 @@ function zoomeExtends() {
   }
 }
 
+
+  // == Add luas markers
+  // https://stackoverflow.com/questions/39106230/style-multiple-geojson-files-with-the-google-maps-javascript-api-v3-data-layer/39107656
+  $.getJSON("./static/data/luas_stations.geojson",function(luasData){
+    for (var i = 0; i < luasData.features.length; i++) {
+      let d = luasData.features[i];
+      let latitude = d.geometry.coordinates[1];
+      let longitude = d.geometry.coordinates[0];
+
+      let image = {
+        url: 'https://mt.google.com/vt/icon/name=icons/onion/SHARED-mymaps-container_4x.png,icons/onion/1718-tram-overhead_4x.png&highlight=673AB7,ff000000&scale=1.0',
+        size: new google.maps.Size(32, 32),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(16, 16)
+      };
+      luasStationMarkers[i] = new google.maps.Marker({
+        position: new google.maps.LatLng(latitude, longitude),
+        map: map,
+        icon: image });    
+    }
+  });
+
+  $.getJSON("./static/data/dart_stations.geojson",function(dartData){
+    for (var i = 0; i < dartData.features.length; i++) {
+      let d = dartData.features[i];
+      let latitude = d.geometry.coordinates[1];
+      let longitude = d.geometry.coordinates[0];
+
+      let image = {
+        url: 'https://mt.google.com/vt/icon/name=icons/onion/SHARED-mymaps-container_4x.png,icons/onion/1716-train_4x.png&highlight=558B2F,ff000000&scale=1.0',
+        size: new google.maps.Size(32, 32),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(16, 16)
+      };
+      dartStationMarkers[i] = new google.maps.Marker({
+        position: new google.maps.LatLng(latitude, longitude),
+        map: map,
+        icon: image });    
+    }
+  });
+
+
 // remove markers
-function setMapOnAll(map) {
-  for (var i = 0; i < luasStationMarkers.length; i++) {
-    luasStationMarkers[i].setMap(map);
+function setMapOnAll(map, dataMarkers) {
+  for (var i = 0; i < dataMarkers.length; i++) {
+    dataMarkers[i].setMap(map);
   }
 }
 // Removes the markers from the map, but keeps them in the array.
@@ -910,11 +935,20 @@ function showMarkers() {
   setMapOnAll(map);
 }
 
-function toggleLuas(){
-  if(luasStationMarkers[0].map == null){
-    setMapOnAll(map);
-  }
-  else{
-    setMapOnAll(null);
-  }
-}
+  function toggleMarkers(dataMarkers){
+    if(dataMarkers[0].map == null){
+      setMapOnAll(map, dataMarkers);
+    }
+    else{
+      setMapOnAll(null, dataMarkers);
+    }}
+
+    function highlightButton(e){
+      if(e.srcElement.classList.contains('active')){
+        e.srcElement.classList.remove('active')
+      }
+      else{
+        e.srcElement.classList.add('active')
+      }
+
+    }

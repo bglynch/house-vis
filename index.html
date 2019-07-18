@@ -19,16 +19,11 @@
     <!-- <nav id="header">
         <p>Header area</p>
     </nav> -->
-    <div id="floating-panel">
-        <input onclick="toggleLuas();" type=button value="Luas">
-      </div>
-
-
     <div id="map"></div>
     <section class="sidebar container">
         <div class="row side-head">
             <button button type="button" class="btn btn-info" onClick="javascript:dc.filterAll(); dc.renderAll();">
-              Reset Filters
+                Reset Filters
             </button>
             <h3 class="col-12">Dublin</h3>
             <div class="col-12 propertyTotal">
@@ -38,26 +33,21 @@
                 </div>
             </div>
             <p class="col-12"></p>
-            <!-- <p class="col-12">Min: <span class="bluetxt number_minPrice"></span></p>
-            <p class="col-12">Max: <span class="bluetxt number_maxPrice"></span></p> -->
-            <div id="searchBox"></div>
-            <div id="maxPriceSearchBox"></div>
-            <!-- <p class="col-12">Avergae: <span class="bluetxt number_avgPrice"></span></p> -->
-            <!-- <p class="col-12">Median: <span class="bluetxt number_medPrice"></span></p> -->
         </div>
         <div class="side-body">
             <div class="data-area row">
 
+                <div class="col-12">
+                    <div id="searchBox"></div>
+                    <div id="maxPriceSearchBox"></div>
+                </div>
                 <div class="col-12">
                     <h2>Postcode</h2>
                     <div id="row_postcode"></div>
                     <div id="pie_postcode"></div>
                     <div id="legend_postcode" class="dc-html-legend-container"></div>
                 </div>
-                <!-- <div class="col-12">
-                    <h2>Postcode</h2>
-                    <div id="cbox_postcode"></div>
-                </div> -->
+
                 <div class="col-12">
                     <h2>Areas</h2>
                     <div id="row_areas"></div>
@@ -65,15 +55,17 @@
                 <div class="col-12">
                     <h2>Asking Price</h2>
                     <div id="bar_askPrice" class="row">
-                        <h6 id="number_minPrice" class="col-6 bluetxt number_minPrice">Min: <span class="number-display"></span></h6>
-                        <h6 id="number_maxPrice" class="col-6 bluetxt number_maxPrice">Max: <span class="number-display"></span></h6>
+                        <h6 id="number_minPrice" class="col-6 bluetxt number_minPrice">Min: <span
+                                class="number-display"></span></h6>
+                        <h6 id="number_maxPrice" class="col-6 bluetxt number_maxPrice">Max: <span
+                                class="number-display"></span></h6>
                     </div>
                 </div>
-                <!-- <div class="col-12">
-                    <h2>Asking Price</h2>
-                    <div id="bar_askPrice2" class="row">
+                <div class="col-12">
+                        <h2>Amenities</h2>
+                        <input id="luas" type="image" alt="Luas" class="luas-btn" src="https://www.luas.ie/assets/theme/images/Luas-og-img.png" onclick="toggleMarkers(luasStationMarkers);highlightButton(event);"> 
+                        <input id="dart" type="image" alt="dart" class="luas-btn" src="https://kfmradio.com/sites/default/files/styles/main_body_width/public/thumbnails/image/Dart%20Logo_2.jpg?itok=KifKeGOc" onclick="toggleMarkers(dartStationMarkers);highlightButton(event);"> 
                     </div>
-                </div> -->
                 <div class="col-12">
                     <h2>Property Type</h2>
                     <div id="row_propertyType"></div>
@@ -117,7 +109,7 @@
     <script src="static/libraries/dc.js-3.0.12/dc.min.js"></script>
 
     <!-- Google Map -->
-    <script src="https://maps.googleapis.com/maps/api/js"></script> 
+    <script src="https://maps.googleapis.com/maps/api/js"></script>
 
     <!-- Javascript: Custom -->
     <script src='static/js/charts.js'></script>
