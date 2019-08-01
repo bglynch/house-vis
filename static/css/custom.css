@@ -178,6 +178,24 @@ div#maxPriceSearchBox {
     box-shadow: 0 0 3px black;
 }
 
+#cbox_postcode {
+    width: 100%;
+}
+
+#cbox_postcode ul.dc-cbox-group {
+    list-style: none;
+    padding-left: 0;
+}
+
+#cbox_postcode label {
+    margin-left: 0.8rem;
+}
+
+#cbox_postcode li.dc-cbox-item {
+    width: 33%;
+    float: left;
+}
+
 
 /* BUILD THEMES */
 /* .header {

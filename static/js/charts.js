@@ -18,6 +18,7 @@ var latDimension;
 var lngDimension;
 var idDimension;
 var idGrouping;
+let postcodeDim;
 
 // == Make charts function creates all the charts
 function makeGraphs(data) {
@@ -43,6 +44,7 @@ function makeGraphs(data) {
   latDimension = ndx.dimension(function (p) { return p.latitude; });
   lngDimension = ndx.dimension(function (p) { return p.longitude; });
   idDimension = ndx.dimension(function (p, i) { return i; });
+  postcodeDim = ndx.dimension(function (d) { return d.postcode });
 
   // == groups
   idGrouping = idDimension.group(function (id) { return id; });
@@ -60,6 +62,7 @@ function makeGraphs(data) {
   row_propertyType(ndx);
   scatter_priceVsFloorArea(ndx);
   pie_postcode(ndx);
+  cbox_postcode(ndx);
   searchBox(ndx);
   maxPriceSearchBox(ndx);
 
@@ -257,7 +260,7 @@ function bar_berRating(ndx) {
     .x(d3.scaleOrdinal())
     .xUnits(dc.units.ordinal)
     ;
-  
+
   chart.yAxisLabel("No. of Houses")
 }
 
@@ -407,15 +410,15 @@ function scatter_priceVsFloorArea(ndx) {
 }
 
 function pie_postcode(ndx) {
-  let dim = ndx.dimension(function (d) { return d.postcode });
-  let group = dim.group();
+  // let dim = ndx.dimension(function (d) { return d.postcode });
+  // let group = dim.group();
 
   let pieChart = dc.pieChart('#pie_postcode');
   pieChart
     .width(200)
     .height(200)
-    .dimension(dim)
-    .group(group)
+    .dimension(postcodeDim)
+    .group(postcodeDim.group())
     .ordering(dc.pluck('postcode'))
     .legend(
       dc.htmlLegend().container('#legend_postcode')
@@ -423,7 +426,19 @@ function pie_postcode(ndx) {
         .highlightSelected(true)
     )
     ;
+}
 
+function cbox_postcode(ndx) {
+  // let dim = ndx.dimension(function (d) { return d.postcode });
+  // let group = dim.group();
+
+  let cboxChart = dc.cboxMenu('#cbox_postcode');
+  cboxChart
+    .dimension(postcodeDim)
+    .group(postcodeDim.group())
+    .multiple(true)
+    //    .numberVisible(10)
+    .controlsUseVisibility(true);
 }
 
 function searchBox(ndx) {
@@ -449,7 +464,7 @@ function maxPriceSearchBox(ndx) {
     })
     .transitionDelay(2000)
     .placeHolder(' Enter Max Price');
-    ;
+  ;
 }
 
 
@@ -878,45 +893,47 @@ function zoomeExtends() {
 }
 
 
-  // == Add luas markers
-  // https://stackoverflow.com/questions/39106230/style-multiple-geojson-files-with-the-google-maps-javascript-api-v3-data-layer/39107656
-  $.getJSON("./static/data/luas_stations.geojson",function(luasData){
-    for (var i = 0; i < luasData.features.length; i++) {
-      let d = luasData.features[i];
-      let latitude = d.geometry.coordinates[1];
-      let longitude = d.geometry.coordinates[0];
+// == Add luas markers
+// https://stackoverflow.com/questions/39106230/style-multiple-geojson-files-with-the-google-maps-javascript-api-v3-data-layer/39107656
+$.getJSON("./static/data/luas_stations.geojson", function (luasData) {
+  for (var i = 0; i < luasData.features.length; i++) {
+    let d = luasData.features[i];
+    let latitude = d.geometry.coordinates[1];
+    let longitude = d.geometry.coordinates[0];
 
-      let image = {
-        url: 'https://mt.google.com/vt/icon/name=icons/onion/SHARED-mymaps-container_4x.png,icons/onion/1718-tram-overhead_4x.png&highlight=673AB7,ff000000&scale=1.0',
-        size: new google.maps.Size(32, 32),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(16, 16)
-      };
-      luasStationMarkers[i] = new google.maps.Marker({
-        position: new google.maps.LatLng(latitude, longitude),
-        map: map,
-        icon: image });    
-    }
-  });
+    let image = {
+      url: 'https://mt.google.com/vt/icon/name=icons/onion/SHARED-mymaps-container_4x.png,icons/onion/1718-tram-overhead_4x.png&highlight=673AB7,ff000000&scale=1.0',
+      size: new google.maps.Size(32, 32),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(16, 16)
+    };
+    luasStationMarkers[i] = new google.maps.Marker({
+      position: new google.maps.LatLng(latitude, longitude),
+      map: map,
+      icon: image
+    });
+  }
+});
 
-  $.getJSON("./static/data/dart_stations.geojson",function(dartData){
-    for (var i = 0; i < dartData.features.length; i++) {
-      let d = dartData.features[i];
-      let latitude = d.geometry.coordinates[1];
-      let longitude = d.geometry.coordinates[0];
+$.getJSON("./static/data/dart_stations.geojson", function (dartData) {
+  for (var i = 0; i < dartData.features.length; i++) {
+    let d = dartData.features[i];
+    let latitude = d.geometry.coordinates[1];
+    let longitude = d.geometry.coordinates[0];
 
-      let image = {
-        url: 'https://mt.google.com/vt/icon/name=icons/onion/SHARED-mymaps-container_4x.png,icons/onion/1716-train_4x.png&highlight=558B2F,ff000000&scale=1.0',
-        size: new google.maps.Size(32, 32),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(16, 16)
-      };
-      dartStationMarkers[i] = new google.maps.Marker({
-        position: new google.maps.LatLng(latitude, longitude),
-        map: map,
-        icon: image });    
-    }
-  });
+    let image = {
+      url: 'https://mt.google.com/vt/icon/name=icons/onion/SHARED-mymaps-container_4x.png,icons/onion/1716-train_4x.png&highlight=558B2F,ff000000&scale=1.0',
+      size: new google.maps.Size(32, 32),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(16, 16)
+    };
+    dartStationMarkers[i] = new google.maps.Marker({
+      position: new google.maps.LatLng(latitude, longitude),
+      map: map,
+      icon: image
+    });
+  }
+});
 
 
 // remove markers
@@ -935,20 +952,21 @@ function showMarkers() {
   setMapOnAll(map);
 }
 
-  function toggleMarkers(dataMarkers){
-    if(dataMarkers[0].map == null){
-      setMapOnAll(map, dataMarkers);
-    }
-    else{
-      setMapOnAll(null, dataMarkers);
-    }}
+function toggleMarkers(dataMarkers) {
+  if (dataMarkers[0].map == null) {
+    setMapOnAll(map, dataMarkers);
+  }
+  else {
+    setMapOnAll(null, dataMarkers);
+  }
+}
 
-    function highlightButton(e){
-      if(e.srcElement.classList.contains('active')){
-        e.srcElement.classList.remove('active')
-      }
-      else{
-        e.srcElement.classList.add('active')
-      }
+function highlightButton(e) {
+  if (e.srcElement.classList.contains('active')) {
+    e.srcElement.classList.remove('active')
+  }
+  else {
+    e.srcElement.classList.add('active')
+  }
 
-    }
+}
