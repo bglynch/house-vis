@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="static/libraries/bootstrap-4.3.1-dist/bootstrap.min.css" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css">
     <link rel="stylesheet" href="static/libraries/dc.js-3.0.12/dc.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="static/css/custom.css" />
 
 </head>
@@ -65,6 +66,19 @@
                                 class="number-display"></span></h6>
                     </div>
                 </div>
+
+                <div class="col-12">
+                    <h2>Asking Price</h2>
+                    Start:<input type="text" id="start" style="border: 0; color: #f6931f; font-weight: bold;width: 100px"
+                    value=0></input>
+                End:<input type="text" id="end" style="border: 0; color: #f6931f; font-weight: bold;" value=100></input>
+                <!-- <br /><br /> -->
+            
+                <div id="valueSlider" style="width:100%;"></div>
+                <!-- <br /><br /> -->
+                <!-- <div id="errorbar"></div> -->
+                </div>
+
                 <div class="col-12">
                         <h2>Amenities</h2>
                         <input id="luas" type="image" alt="Luas" class="luas-btn" src="https://www.luas.ie/assets/theme/images/Luas-og-img.png" onclick="toggleMarkers(luasStationMarkers);highlightButton(event);"> 
@@ -103,6 +117,7 @@
     <!-- Bootstrap: jQuery first, then Popper.js, then Bootstrap JS -->
     <!-- <script src="static/libraries/jquery-3.4.1-dist/jquery.slim.min.js"></script> -->
     <script src="https://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
     <script src="static/libraries/popper.js-1.15.0/popper.min.js"></script>
     <script src="static/libraries/bootstrap-4.3.1-dist/bootstrap.min.js"></script>

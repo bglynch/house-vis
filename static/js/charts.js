@@ -54,6 +54,7 @@ function makeGraphs(data) {
 
   num_availHouses(ndx)
   bar_askingPrice(ndx)
+  slider_askingPrice(ndx);
   bar_berRating(ndx);
   bar_bedrooms(ndx);
   row_areas(ndx);
@@ -231,6 +232,54 @@ function bar_askingPrice(ndx) {
 
 }
 
+function slider_askingPrice(ndx){
+  let dim = ndx.dimension(function (d) { return d.price })
+  let group = dim.group();
+  // var filterChart = dc.barChart("#errorbar");
+
+
+  topLikes = dim.top(1)[0].price;
+  bottomLikes = dim.bottom(1)[0].price;
+
+  $(document).ready(function () {
+
+    document.getElementById("start").value = bottomLikes;
+    document.getElementById("end").value = topLikes;
+
+
+    $("#valueSlider").slider({
+        range: true,
+        min: bottomLikes,
+        max: topLikes,
+        step: 10000,
+        values: [bottomLikes, topLikes],
+        slide: function (event, ui) {
+            $("#start").val(ui.values[0]);
+            $("#end").val(ui.values[1]);
+            if (document.getElementById("start").value != "") { start = document.getElementById("start").value; };
+            if (document.getElementById("end").value != "") { end = document.getElementById("end").value; };
+            dim.filterRange([start, end]);
+            dc.redrawAll();
+            if ((ui.values[0] + 0.1) >= ui.values[1]) { return false; }
+        }
+
+    });
+});
+
+
+// filterChart.width(350).height(90)
+//     .dimension(dim)
+//     .group(group)
+//     .transitionDuration(500)
+//     .elasticX(true)
+//     .elasticY(true)
+//     .x(d3.scaleOrdinal())
+//     .xUnits(dc.units.ordinal)
+//     .colors(["orange"])
+//     .yAxis().ticks(5);
+
+}
+
 function bar_berRating(ndx) {
   let dim = ndx.dimension(function (d) { return d.berRating });
   let group = dim.group();
@@ -330,7 +379,14 @@ function row_areas(ndx) {
     .height(300)
     .elasticX(true)
     .valueAccessor(function (p) { return p.value.count; })
-    .title(function (p) { return "Median Value: €" + p.value.med; })
+    .title(function (p) {
+      if(p.value.med < 1000000){
+        return "Median Value: €" + numberFormatter(p.value.med);
+      }
+      else{
+      return "Median Value: €" + numberFormatter(p.value.med, 2); 
+    }
+    })
     .renderTitleLabel(true)
     .xAxis().ticks(4)
     ;
@@ -969,4 +1025,24 @@ function highlightButton(e) {
     e.srcElement.classList.add('active')
   }
 
+}
+
+
+
+// helper functions
+const symbols = [
+  { value: 1, symbol: '' },
+  { value: 1e3, symbol: 'k' },
+  { value: 1e6, symbol: 'M' }
+];
+
+function numberFormatter(num, digits) {
+  const numToCheck = Math.abs(num);
+  for (let i = symbols.length - 1; i >= 0; i--) {
+    if (numToCheck >= symbols[i].value) {
+      const newNumber = (num / symbols[i].value).toFixed(digits);
+      return `${newNumber}${symbols[i].symbol}`;
+    }
+  }
+  return '0';
 }
