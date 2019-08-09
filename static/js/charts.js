@@ -381,10 +381,10 @@ function row_areas(ndx) {
     .valueAccessor(function (p) { return p.value.count; })
     .title(function (p) {
       if(p.value.med < 1000000){
-        return "Median Value: €" + numberFormatter(p.value.med);
+        return "Median: €" + numberFormatter(p.value.med);
       }
       else{
-      return "Median Value: €" + numberFormatter(p.value.med, 2); 
+      return "Median: €" + numberFormatter(p.value.med, 2); 
     }
     })
     .renderTitleLabel(true)
