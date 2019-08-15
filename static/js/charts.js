@@ -136,7 +136,7 @@ function bar_askingPrice(ndx) {
       // chart.redrawGroup();
       console.log(min);
     });
-  ;
+  
   chart.xAxis().tickValues([0, min, max * 0.25, max * 0.5, max * 0.75, max]);
   chart.yAxis().tickValues([0]);
 
@@ -529,6 +529,7 @@ const median = arr => {
     nums = [...arr].sort((a, b) => a - b);
   return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 };
+
 function formatNumber(num) {
   if (num != null) {
     let parsedNum = num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
