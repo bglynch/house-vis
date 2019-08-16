@@ -1,77 +1,80 @@
+let map;
+let markers = [];
+let luasStationMarkers = [], dartStationMarkers = [];
+// var bounds = new google.maps.LatLngBounds();
+
+let ndx;
+let dimLat, dimLng, dimId, dimPostcode, dimBER, dimPrice, dimBeds, dimArea, dimGarden, dimParking, dimPropType, dimFloorArea, dimFloorVsPrice, dimAddress;
+let idGrouping;
+
 // == load the data == /
 d3.json('static/js/data.json')
   .then(function (data) {
 
-    makeGraphs(data);
+    // remove property with 
+    let filteredData = data.filter(function (value, index, arr) {
+      return !(value.propertyType == "site" || value.priceType == "on-application")
+    })
+
+    // Modify the dataset
+    filteredData.forEach(function (d) {
+      d.price = +d.price;
+      d.bedrooms = +d.bedrooms
+      d.longitude = +d.longitude;
+      d.latitude = +d.latitude;
+      if (d.berRating == null) { d.berRating = "N/A" }
+      if (d.berRating == "SINo666of2006exempt") { d.berRating = "X" }
+    });
+
+    // == choose color scheme for the charts
+    dc.config.defaultColors(d3.schemeDark2);
+
+    // == crossfilter the data
+    ndx = crossfilter(filteredData);
+    let all = ndx.groupAll();
+
+    // == dimensions
+    dimLat = ndx.dimension(function (p) { return p.latitude; });
+    dimLng = ndx.dimension(function (p) { return p.longitude; });
+    dimId = ndx.dimension(function (p, i) { return i; });
+    dimPostcode = ndx.dimension(function (d) { return d.postcode });
+    dimPrice = ndx.dimension(function (d) { return d.price });
+    dimBER = ndx.dimension(function (d) { return d.berRating });
+    dimBeds = ndx.dimension(function (d) { return d.bedrooms });
+    dimArea = ndx.dimension(function (d) { return d.area });
+    dimGarden = ndx.dimension(function (d) { return d.hasGarden });
+    dimParking = ndx.dimension(function (d) { return d.hasParking });
+    dimPropType = ndx.dimension(function (d) { return d.propertyType });
+    dimFloorArea = ndx.dimension(function (d) { return d.floorArea });
+    dimFloorVsPrice = ndx.dimension(function (d) { return [d.floorArea, d.price] });
+    dimAddress = ndx.dimension(function (d) { return d.address });
+
+    // == groups
+    idGrouping = dimId.group(function (id) { return id; });
+
+    // == create the charts
+    // updateChartsOnMapZoom()
+
+    num_availHouses(ndx, all)
+    bar_askingPrice(ndx, dimPrice)
+    // slider_askingPrice(ndx);
+    bar_berRating(ndx, dimBER);
+    bar_bedrooms(ndx, dimBeds);
+    row_areas(ndx, dimArea);
+    bar_garden(ndx, dimGarden);
+    bar_parking(ndx, dimParking);
+    row_propertyType(ndx, dimPropType);
+    scatter_priceVsFloorArea(ndx, dimFloorArea, dimFloorVsPrice);
+    pie_postcode(ndx, dimPostcode);
+    cbox_postcode(ndx, dimPostcode);
+    searchBox(ndx, dimAddress);
+    maxPriceSearchBox(ndx, dimPrice);
+
+    initMap(filteredData)
+    updateMapOnChartFilters()
+
+    dc.renderAll();
   })
-
-var map;
-var markers = [];
-var luasStationMarkers = [];
-var dartStationMarkers = [];
-// var bounds = new google.maps.LatLngBounds();
-var ndx;
-var val1Dim, val2Dim, berDim, propertyTypeDim, bedsDim, bathsDim;
-var val1Group, val2Group;
-
-var latDimension;
-var lngDimension;
-var idDimension;
-var idGrouping;
-let postcodeDim;
-
-// == Make charts function creates all the charts
-function makeGraphs(data) {
-  let filteredData = data.filter(function (value, index, arr) {
-    return !(value.propertyType == "site" || value.priceType == "on-application")
-  })
-  filteredData.forEach(function (d) {
-    d.price = +d.price;
-    d.bedrooms = +d.bedrooms
-    d.longitude = +d.longitude;
-    d.latitude = +d.latitude;
-    if (d.berRating == null) { d.berRating = "N/A" }
-    if (d.berRating == "SINo666of2006exempt") { d.berRating = "X" }
-  });
-
-  // == modify the data
-  dc.config.defaultColors(d3.schemeDark2);
-
-  // == crossfilter the data
-  ndx = crossfilter(filteredData);
-
-  // == dimensions
-  latDimension = ndx.dimension(function (p) { return p.latitude; });
-  lngDimension = ndx.dimension(function (p) { return p.longitude; });
-  idDimension = ndx.dimension(function (p, i) { return i; });
-  postcodeDim = ndx.dimension(function (d) { return d.postcode });
-
-  // == groups
-  idGrouping = idDimension.group(function (id) { return id; });
-
-  // == create the charts
-  // updateChartsOnMapZoom()
-
-  num_availHouses(ndx)
-  bar_askingPrice(ndx)
-  slider_askingPrice(ndx);
-  bar_berRating(ndx);
-  bar_bedrooms(ndx);
-  row_areas(ndx);
-  bar_garden(ndx);
-  bar_parking(ndx);
-  row_propertyType(ndx);
-  scatter_priceVsFloorArea(ndx);
-  pie_postcode(ndx);
-  cbox_postcode(ndx);
-  searchBox(ndx);
-  maxPriceSearchBox(ndx);
-
-  initMap(filteredData)
-  updateMapOnChartFilters()
-
-  dc.renderAll();
-}
 
 function match_parent_width(chart) {
   return chart.selectAll()._parents[0].clientWidth;
@@ -95,30 +98,18 @@ function remove_empty_bins2(source_group) {
   };
 }
 
-// function updateChartsOnMapZoom() {
-//     google.maps.event.addListener(map, 'bounds_changed', function () {
-//         var bounds = this.getBounds();
-//         var northEast = bounds.getNorthEast();
-//         var southWest = bounds.getSouthWest();
+// ========================================================================= //
+//  Functions to create the charts
+// ========================================================================= // 
 
-//         lngDimension.filterRange([southWest.lng(), northEast.lng()]);
-//         latDimension.filterRange([southWest.lat(), northEast.lat()]);
-
-//         dc.redrawAll();
-//     });
-// }
-
-function num_availHouses(ndx) {
-  let group = ndx.groupAll();
-
+function num_availHouses(ndx, group) {
   dc.dataCount('.dc-data-count')
     .crossfilter(ndx)
     .groupAll(group)
     .transitionDuration(500);
 }
 
-function bar_askingPrice(ndx) {
-  let dim = ndx.dimension(function (d) { return d.price })
+function bar_askingPrice(ndx, dim) {
   let group = dim.group();
   let chart = dc.barChart('#bar_askPrice');
   let min = dim.bottom(1)[0].price * 0.9;
@@ -131,24 +122,10 @@ function bar_askingPrice(ndx) {
     .height(100)
     .x(d3.scaleLinear().domain([0, max]))
     .brushOn(true)
-    .elasticY(true)
-    .on('pretransition', function () {
-      // chart.redrawGroup();
-      console.log(min);
-    });
-  
+    .elasticY(true);
+
   chart.xAxis().tickValues([0, min, max * 0.25, max * 0.5, max * 0.75, max]);
   chart.yAxis().tickValues([0]);
-
-  // let chart2 = dc.lineChart('#bar_askPrice2');
-  // chart2
-  //     .dimension(dim)
-  //     .group(remove_empty_bins(group))
-  //     .width(chart2.selectAll()._parents[0].parentElement.clientWidth)
-  //     .height(100)
-  //     .x(d3.scaleLinear().domain([-100000, 1.1*max]))
-  //     .brushOn(true)
-  //     .elasticX(true);
 
 
   let housePrices = ndx.groupAll().reduce(
@@ -232,56 +209,8 @@ function bar_askingPrice(ndx) {
 
 }
 
-function slider_askingPrice(ndx){
-  let dim = ndx.dimension(function (d) { return d.price })
-  let group = dim.group();
-  // var filterChart = dc.barChart("#errorbar");
-
-
-  topLikes = dim.top(1)[0].price;
-  bottomLikes = dim.bottom(1)[0].price;
-
-  $(document).ready(function () {
-
-    document.getElementById("start").value = bottomLikes;
-    document.getElementById("end").value = topLikes;
-
-
-    $("#valueSlider").slider({
-        range: true,
-        min: bottomLikes,
-        max: topLikes,
-        step: 10000,
-        values: [bottomLikes, topLikes],
-        slide: function (event, ui) {
-            $("#start").val(ui.values[0]);
-            $("#end").val(ui.values[1]);
-            if (document.getElementById("start").value != "") { start = document.getElementById("start").value; };
-            if (document.getElementById("end").value != "") { end = document.getElementById("end").value; };
-            dim.filterRange([start, end]);
-            dc.redrawAll();
-            if ((ui.values[0] + 0.1) >= ui.values[1]) { return false; }
-        }
-
-    });
-});
-
-
-// filterChart.width(350).height(90)
-//     .dimension(dim)
-//     .group(group)
-//     .transitionDuration(500)
-//     .elasticX(true)
-//     .elasticY(true)
-//     .x(d3.scaleOrdinal())
-//     .xUnits(dc.units.ordinal)
-//     .colors(["orange"])
-//     .yAxis().ticks(5);
-
-}
-
-function bar_berRating(ndx) {
-  let dim = ndx.dimension(function (d) { return d.berRating });
+function bar_berRating(ndx, dim) {
+  // let dim = ndx.dimension(function (d) { return d.berRating });
   let group = dim.group();
   let chart = dc.barChart('#bar_berRating');
 
@@ -306,33 +235,31 @@ function bar_berRating(ndx) {
       else if (d.key.includes("F")) { return "F" }
       return "G";
     })
-    .x(d3.scaleOrdinal())
+    .x(d3.scaleBand())
     .xUnits(dc.units.ordinal)
     ;
 
   chart.yAxisLabel("No. of Houses")
 }
 
-function bar_bedrooms(ndx) {
-  let dim = ndx.dimension(function (d) { return d.bedrooms });
-  let group = dim.group();
+function bar_bedrooms(ndx, dim) {
   let chart = dc.barChart('#bar_beds');
 
   chart
     .dimension(dim)
-    .group(group)
+    .group(dim.group())
     .width(chart.selectAll()._parents[0].parentElement.clientWidth)
     .height(150)
     .elasticY(true)
-    .x(d3.scaleOrdinal())
+    .x(d3.scaleBand())
     .brushOn(true)
     .xUnits(dc.units.ordinal)
     ;
 }
 
-function row_areas(ndx) {
-  let dim = ndx.dimension(function (d) { return d.area });
-  let group = dim.group();
+function row_areas(ndx, dim) {
+  // let dim = ndx.dimension(function (d) { return d.area });
+  // let group = dim.group();
   let chart = dc.rowChart('#row_areas');
 
   let housePrices = dim.group().reduce(
@@ -380,12 +307,12 @@ function row_areas(ndx) {
     .elasticX(true)
     .valueAccessor(function (p) { return p.value.count; })
     .title(function (p) {
-      if(p.value.med < 1000000){
+      if (p.value.med < 1000000) {
         return "Median: €" + numberFormatter(p.value.med);
       }
-      else{
-      return "Median: €" + numberFormatter(p.value.med, 2); 
-    }
+      else {
+        return "Median: €" + numberFormatter(p.value.med, 2);
+      }
     })
     .renderTitleLabel(true)
     .xAxis().ticks(4)
@@ -393,46 +320,40 @@ function row_areas(ndx) {
 
 }
 
-function bar_garden(ndx) {
-  let dim = ndx.dimension(function (d) { return d.hasGarden });
-  let group = dim.group();
+function bar_garden(ndx, dim) {
   let chart = dc.barChart('#bar_garden');
 
   chart
     .dimension(dim)
-    .group(group)
+    .group(dim.group())
     .width(chart.selectAll()._parents[0].parentElement.clientWidth)
     .height(150)
     .elasticY(true)
-    .x(d3.scaleOrdinal())
+    .x(d3.scaleBand())
     .xUnits(dc.units.ordinal)
     ;
 }
 
-function bar_parking(ndx) {
-  let dim = ndx.dimension(function (d) { return d.hasParking });
-  let group = dim.group();
+function bar_parking(ndx, dim) {
   let chart = dc.barChart('#bar_parking');
 
   chart
     .dimension(dim)
-    .group(group)
+    .group(dim.group())
     .width(chart.selectAll()._parents[0].parentElement.clientWidth)
     .height(150)
     .elasticY(true)
-    .x(d3.scaleOrdinal())
+    .x(d3.scaleBand())
     .xUnits(dc.units.ordinal)
     ;
 }
 
-function row_propertyType(ndx) {
-  let dim = ndx.dimension(function (d) { return d.propertyType });
-  let group = dim.group();
+function row_propertyType(ndx, dim) {
   let chart = dc.rowChart('#row_propertyType');
 
   chart
     .dimension(dim)
-    .group(remove_empty_bins(group))
+    .group(remove_empty_bins(dim.group()))
     .width(chart.selectAll()._parents[0].parentElement.clientWidth)
     .height(225)
     .elasticX(true)
@@ -443,19 +364,14 @@ function row_propertyType(ndx) {
     .xAxis().ticks(4);
 }
 
-function scatter_priceVsFloorArea(ndx) {
-  let floorDim = ndx.dimension(function (d) { return d.floorArea });
-  let priceDim = ndx.dimension(function (d) { return [d.floorArea, d.price] });
-  let group = priceDim.group()
-
-  var minArea = floorDim.bottom(1)[0].floorArea;
-  var maxArea = floorDim.top(1)[0].floorArea;
+function scatter_priceVsFloorArea(ndx, dim01, dim02) {
+  var maxArea = dim01.top(1)[0].floorArea;
 
   let chart = dc.scatterPlot("#scatter_PriceVFloorArea");
 
   chart
-    .dimension(priceDim)
-    .group(remove_empty_bins(group))
+    .dimension(dim02)
+    .group(remove_empty_bins(dim02.group()))
     .width(chart.selectAll()._parents[0].parentElement.clientWidth)
     .height(400)
     .x(d3.scaleLinear().domain([0, maxArea + 0.1 * maxArea]))
@@ -465,16 +381,14 @@ function scatter_priceVsFloorArea(ndx) {
     .margins({ top: 10, right: 50, bottom: 60, left: 80 });
 }
 
-function pie_postcode(ndx) {
-  // let dim = ndx.dimension(function (d) { return d.postcode });
-  // let group = dim.group();
-
+function pie_postcode(ndx, dim) {
   let pieChart = dc.pieChart('#pie_postcode');
+
   pieChart
     .width(200)
     .height(200)
-    .dimension(postcodeDim)
-    .group(postcodeDim.group())
+    .dimension(dim)
+    .group(dim.group())
     .ordering(dc.pluck('postcode'))
     .legend(
       dc.htmlLegend().container('#legend_postcode')
@@ -484,32 +398,27 @@ function pie_postcode(ndx) {
     ;
 }
 
-function cbox_postcode(ndx) {
-  // let dim = ndx.dimension(function (d) { return d.postcode });
-  // let group = dim.group();
-
+function cbox_postcode(ndx, dim) {
   let cboxChart = dc.cboxMenu('#cbox_postcode');
+
   cboxChart
-    .dimension(postcodeDim)
-    .group(postcodeDim.group())
+    .dimension(dim)
+    .group(dim.group())
     .multiple(true)
-    //    .numberVisible(10)
     .controlsUseVisibility(true);
 }
 
-function searchBox(ndx) {
-  let dim = ndx.dimension(function (d) { return d.address });
-
+function searchBox(ndx, dim) {
   let chart = dc.textFilterWidget('#searchBox');
+
   chart
     .dimension(dim)
     .placeHolder(' Search by Address');
 }
 
-function maxPriceSearchBox(ndx) {
-  let dim = ndx.dimension(function (d) { return d.price });
-
+function maxPriceSearchBox(ndx, dim) {
   let chart = dc.textFilterWidget('#maxPriceSearchBox');
+
   chart
     .dimension(dim)
     .filterFunctionFactory(function (query) {
@@ -524,23 +433,9 @@ function maxPriceSearchBox(ndx) {
 }
 
 
-const median = arr => {
-  const mid = Math.floor(arr.length / 2),
-    nums = [...arr].sort((a, b) => a - b);
-  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
-};
-
-function formatNumber(num) {
-  if (num != null) {
-    let parsedNum = num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-    return parsedNum + " m2"
-  }
-  else {
-    return "Floor Area Not Available"
-  }
-
-}
-
+// ========================================================================= //
+//  Functions relating to the Google Map
+// ========================================================================= // 
 let drawLayer;
 
 function initMap(data) {
@@ -935,12 +830,13 @@ function createMapPopup(d) {
 
   return popup;
 }
+
 function zoomeExtends() {
   if (markers.length > 0) {
-    let north = latDimension.top(1)[0].latitude
-    let south = latDimension.bottom(1)[0].latitude
-    let west = lngDimension.bottom(1)[0].longitude
-    let east = lngDimension.top(1)[0].longitude
+    let north = dimLat.top(1)[0].latitude
+    let south = dimLat.bottom(1)[0].latitude
+    let west = dimLng.bottom(1)[0].longitude
+    let east = dimLng.top(1)[0].longitude
 
     let sw = new google.maps.LatLng({ lat: south, lng: west });
     let ne = new google.maps.LatLng({ lat: north, lng: east });
@@ -950,7 +846,10 @@ function zoomeExtends() {
 }
 
 
-// == Add luas markers
+// ========================================================================= //
+//  Add additional data markers to the map
+// ========================================================================= // 
+
 // https://stackoverflow.com/questions/39106230/style-multiple-geojson-files-with-the-google-maps-javascript-api-v3-data-layer/39107656
 $.getJSON("./static/data/luas_stations.geojson", function (luasData) {
   for (var i = 0; i < luasData.features.length; i++) {
@@ -992,7 +891,6 @@ $.getJSON("./static/data/dart_stations.geojson", function (dartData) {
   }
 });
 
-
 // remove markers
 function setMapOnAll(map, dataMarkers) {
   for (var i = 0; i < dataMarkers.length; i++) {
@@ -1029,8 +927,9 @@ function highlightButton(e) {
 }
 
 
-
-// helper functions
+// ========================================================================= //
+//  General functions
+// ========================================================================= // 
 const symbols = [
   { value: 1, symbol: '' },
   { value: 1e3, symbol: 'k' },
@@ -1047,3 +946,88 @@ function numberFormatter(num, digits) {
   }
   return '0';
 }
+
+const median = arr => {
+  const mid = Math.floor(arr.length / 2),
+    nums = [...arr].sort((a, b) => a - b);
+  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+};
+
+function formatNumber(num) {
+  if (num != null) {
+    let parsedNum = num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+    return parsedNum + " m2"
+  }
+  else {
+    return "Floor Area Not Available"
+  }
+
+}
+
+
+
+
+/**
+function slider_askingPrice(ndx){
+  let dim = ndx.dimension(function (d) { return d.price })
+  let group = dim.group();
+  // var filterChart = dc.barChart("#errorbar");
+
+
+  topLikes = dim.top(1)[0].price;
+  bottomLikes = dim.bottom(1)[0].price;
+
+  $(document).ready(function () {
+
+    document.getElementById("start").value = bottomLikes;
+    document.getElementById("end").value = topLikes;
+
+
+    $("#valueSlider").slider({
+        range: true,
+        min: bottomLikes,
+        max: topLikes,
+        step: 10000,
+        values: [bottomLikes, topLikes],
+        slide: function (event, ui) {
+            $("#start").val(ui.values[0]);
+            $("#end").val(ui.values[1]);
+            if (document.getElementById("start").value != "") { start = document.getElementById("start").value; };
+            if (document.getElementById("end").value != "") { end = document.getElementById("end").value; };
+            dim.filterRange([start, end]);
+            dc.redrawAll();
+            if ((ui.values[0] + 0.1) >= ui.values[1]) { return false; }
+        }
+
+    });
+});
+
+
+filterChart.width(350).height(90)
+    .dimension(dim)
+    .group(group)
+    .transitionDuration(500)
+    .elasticX(true)
+    .elasticY(true)
+    .x(d3.scaleOrdinal())
+    .xUnits(dc.units.ordinal)
+    .colors(["orange"])
+    .yAxis().ticks(5);
+
+}
+ */
+
+/**
+function updateChartsOnMapZoom() {
+    google.maps.event.addListener(map, 'bounds_changed', function () {
+        var bounds = this.getBounds();
+        var northEast = bounds.getNorthEast();
+        var southWest = bounds.getSouthWest();
+
+        dimLng.filterRange([southWest.lng(), northEast.lng()]);
+        dimLat.filterRange([southWest.lat(), northEast.lat()]);
+
+        dc.redrawAll();
+    });
+}
+ **/

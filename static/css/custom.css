@@ -37,15 +37,13 @@
     color: #5a5a5a;
     background: #e6e6e6;
     box-sizing: border-box;
-    /* height: 23vh; */
 }
 
 .side-head h3 {
-    font-family: 'Lato', sans-serif;
-    font-weight: 900;
     font-size: 31px;
     color: #0f325a;
     margin-bottom: 0;
+    margin-top: 0;
 }
 
 button.btn.btn-info {
@@ -63,7 +61,7 @@ button.btn.btn-info {
 .filter-count {
     font-family: 'Lato', sans-serif;
     font-weight: 900;
-    font-size: 3em;
+    font-size: 2.5em;
     padding-bottom: 0;
     padding-top: 0;
     line-height: 1em;
@@ -117,6 +115,14 @@ span.bluetxt {
     font-weight: 700;
 }
 
+.dc-data-count .filter-count, .dc-data-count .total-count {
+    color: #000000;
+    /* font-weight: 700; */
+}
+.btn{
+    background-color: #000000; 
+}
+
 
 
 /* Chart Over rides */
@@ -138,18 +144,17 @@ min-width: 8rem;
 display: none;
 }
 
-div#pie_postcode {
+#pie_postcode {
     display: none;
 }
 
 div.dc-html-legend .dc-legend-item-horizontal.selected {
-    background-color: #82b648;
+    background-color: #692da0;
     color: #fff;
 }
 
-div#searchBox {
+#searchBox {
     width: 60%;
-    padding-top: 30px;
     line-height: 2.5;
 }
 
@@ -157,9 +162,8 @@ div#searchBox {
     width: 100%
 }
 
-div#maxPriceSearchBox {
+#maxPriceSearchBox {
     width: 37%;
-    padding-top: 30px;
     line-height: 2.5;
     float: right;
 }
@@ -194,6 +198,12 @@ div#maxPriceSearchBox {
 #cbox_postcode li.dc-cbox-item {
     width: 33%;
     float: left;
+}
+
+
+/* == Info windows == */
+.gm-style img {
+    width: 100%;
 }
 
 
